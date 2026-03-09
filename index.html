@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Progresso do Dev Xodozada</title>
+
+  <!-- Google Fonts: display + body pairing -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="CSS/style.css">
+
+  <!-- =====================================================
+       CSS PRINCIPAL — será substituído/expandido depois
+  ====================================================== -->
+  <style>
+    /* ── CSS Custom Properties ─────────────────────────── */
+    :root {
+      --bg-base:        #0b0d12;
+      --bg-surface:     #12151d;
+      --bg-card:        #181c27;
+      --bg-card-hover:  #1e2335;
+      --border:         #252a3a;
+      --border-glow:    #3d4a6b;
+
+      --accent-primary: #4f8ef7;   /* azul elétrico */
+      --accent-glow:    #4f8ef740;
+      --accent-green:   #3ddba5;
+      --accent-yellow:  #f5c842;
+      --accent-red:     #f76f6f;
+      --accent-purple:  #a78bfa;
+
+      --text-primary:   #e8ecf5;
+      --text-secondary: #8892a8;
+      --text-muted:     #4b5470;
+
+      --font-display: 'Orbitron', monospace;
+      --font-body:    'DM Sans', sans-serif;
+
+      --radius-sm:  6px;
+      --radius-md:  12px;
+      --radius-lg:  18px;
+
+      --shadow-card: 0 4px 32px rgba(0,0,0,0.45);
+      --shadow-glow: 0 0 18px var(--accent-glow);
+
+      --transition: 0.22s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── Reset & Base ───────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+      /* scanline texture overlay */
+      background-image:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(255,255,255,0.012) 2px,
+          rgba(255,255,255,0.012) 4px
+        );
+    }
+
+    /* ── Scrollbar ──────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 3px; }
+  </style>
+
+  <!-- LINK placeholder para CSS externo (a ser adicionado) -->
+  <!-- <link rel="stylesheet" href="style.css" /> -->
+</head>
+
+<body id="app">
+
+  <!-- =====================================================
+       HEADER — Título, progresso geral e sistema de Level
+  ====================================================== -->
+  <header class="site-header" id="site-header" role="banner">
+
+    <div class="header-inner">
+
+      <!-- Identidade / Branding -->
+      <div class="brand" aria-label="Nome da aplicação">
+        <span class="brand-icon" aria-hidden="true">⌥</span>
+        <h1 class="brand-title">
+          Progresso do Dev <span class="brand-highlight">Xodozada</span>
+        </h1>
+      </div>
+
+      <!-- Sistema de Level (RPG-style) -->
+      <div class="level-system" id="level-system" aria-label="Sistema de nível do desenvolvedor">
+
+        <!-- Badge de Level -->
+        <div class="level-badge" id="level-badge" role="status" aria-live="polite">
+          <span class="level-label">Level</span>
+          <span class="level-number" id="level-number">3</span>
+          <span class="level-title" id="level-title">Developer</span>
+        </div>
+
+        <!-- Barra de progresso + porcentagem -->
+        <div class="progress-wrapper">
+          <div class="progress-meta">
+            <span class="progress-label">Progresso Geral</span>
+            <span class="progress-percent" id="progress-percent" aria-live="polite">70%</span>
+          </div>
+
+          <!-- Barra visual (width controlada por JS) -->
+          <div
+            class="progress-bar-track"
+            role="progressbar"
+            aria-valuenow="70"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-label="Progresso total de aprendizado"
+            id="progress-bar-track"
+          >
+            <div class="progress-bar-fill" id="progress-bar-fill" style="width: 70%;"></div>
+            <!-- Segmentos de level marcados na trilha -->
+            <div class="progress-segments" aria-hidden="true">
+              <span class="seg" style="left:20%"  data-label="L2"></span>
+              <span class="seg" style="left:40%"  data-label="L3"></span>
+              <span class="seg" style="left:60%"  data-label="L4"></span>
+              <span class="seg" style="left:80%"  data-label="L5"></span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /level-system -->
+
+    </div><!-- /header-inner -->
+
+  </header>
+  <!-- /HEADER -->
+
+
+  <!-- =====================================================
+       MAIN — Conteúdo principal da aplicação
+  ====================================================== -->
+  <main class="main-layout" id="main-layout" role="main">
+
+
+    <!-- ─────────────────────────────────────────────────
+         SEÇÃO ESQUERDA — Roadmap de Estudos
+    ───────────────────────────────────────────────────── -->
+    <section
+      class="section-roadmap"
+      id="section-roadmap"
+      aria-labelledby="roadmap-heading"
+    >
+
+      <div class="section-header">
+        <h2 class="section-title" id="roadmap-heading">
+          <span class="section-icon" aria-hidden="true">◈</span>
+          Roadmap de Estudos
+        </h2>
+        <span class="section-subtitle">Marque seu progresso tópico a tópico</span>
+      </div>
+
+      <!-- Lista de tópicos — preenchida via JS (localStorage) -->
+      <div class="topics-list" id="topics-list" role="list" aria-label="Lista de tópicos de estudo">
+
+        <!-- ────────────────────────────────────────────
+             TÓPICO EXEMPLO 1 — Lógica de Programação
+             (template que o JS vai replicar)
+        ─────────────────────────────────────────────── -->
+        <article
+          class="topic-card"
+          id="topic-1"
+          data-topic-id="1"
+          role="listitem"
+          aria-label="Tópico: Lógica de Programação"
+        >
+
+          <!-- Cabeçalho do tópico -->
+          <header class="topic-header">
+            <div class="topic-title-group">
+              <span class="topic-status-dot" id="topic-1-dot" aria-hidden="true"></span>
+              <h3 class="topic-title" id="topic-1-title">Lógica de Programação</h3>
+            </div>
+
+            <!-- Progresso interno do tópico -->
+            <div class="topic-progress-mini" aria-label="Progresso do tópico">
+              <span class="topic-progress-text" id="topic-1-progress">2/4</span>
+              <div class="topic-bar-track">
+                <div class="topic-bar-fill" id="topic-1-bar" style="width: 50%;"></div>
+              </div>
+            </div>
+
+            <!-- Ações do tópico -->
+            <div class="topic-actions" role="group" aria-label="Ações do tópico Lógica de Programação">
+              <button
+                class="btn-icon btn-edit"
+                data-action="edit-topic"
+                data-target="topic-1"
+                aria-label="Editar tópico"
+                title="Editar tópico"
+              >✎</button>
+              <button
+                class="btn-icon btn-remove"
+                data-action="remove-topic"
+                data-target="topic-1"
+                aria-label="Remover tópico"
+                title="Remover tópico"
+              >✕</button>
+            </div>
+          </header>
+          <!-- /topic-header -->
+
+          <!-- Lista de Subtópicos (checklist) -->
+          <ul
+            class="subtopics-list"
+            id="topic-1-subtopics"
+            role="list"
+            aria-label="Subtópicos de Lógica de Programação"
+          >
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input
+                  type="checkbox"
+                  class="subtopic-check"
+                  data-topic-id="1"
+                  data-subtopic-id="1-1"
+                  checked
+                  aria-label="Variáveis — concluído"
+                />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Variáveis</span>
+              </label>
+            </li>
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input
+                  type="checkbox"
+                  class="subtopic-check"
+                  data-topic-id="1"
+                  data-subtopic-id="1-2"
+                  checked
+                  aria-label="Operadores — concluído"
+                />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Operadores</span>
+              </label>
+            </li>
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input
+                  type="checkbox"
+                  class="subtopic-check"
+                  data-topic-id="1"
+                  data-subtopic-id="1-3"
+                  aria-label="Loops — pendente"
+                />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Loops</span>
+              </label>
+            </li>
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input
+                  type="checkbox"
+                  class="subtopic-check"
+                  data-topic-id="1"
+                  data-subtopic-id="1-4"
+                  aria-label="Funções — pendente"
+                />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Funções</span>
+              </label>
+            </li>
+
+          </ul>
+          <!-- /subtopics-list -->
+
+          <!-- Rodapé: adicionar subtópico -->
+          <footer class="topic-footer">
+            <button
+              class="btn-add-sub"
+              data-action="add-subtopic"
+              data-target="topic-1"
+              aria-label="Adicionar novo subtópico em Lógica de Programação"
+            >
+              <span aria-hidden="true">＋</span> Adicionar subtópico
+            </button>
+          </footer>
+
+        </article>
+        <!-- /topic-1 -->
+
+
+        <!-- ────────────────────────────────────────────
+             TÓPICO EXEMPLO 2 — HTML & CSS
+        ─────────────────────────────────────────────── -->
+        <article
+          class="topic-card"
+          id="topic-2"
+          data-topic-id="2"
+          role="listitem"
+          aria-label="Tópico: HTML e CSS"
+        >
+
+          <header class="topic-header">
+            <div class="topic-title-group">
+              <span class="topic-status-dot is-complete" id="topic-2-dot" aria-hidden="true"></span>
+              <h3 class="topic-title" id="topic-2-title">HTML &amp; CSS</h3>
+            </div>
+
+            <div class="topic-progress-mini" aria-label="Progresso do tópico">
+              <span class="topic-progress-text" id="topic-2-progress">3/3</span>
+              <div class="topic-bar-track">
+                <div class="topic-bar-fill is-complete" id="topic-2-bar" style="width: 100%;"></div>
+              </div>
+            </div>
+
+            <div class="topic-actions" role="group" aria-label="Ações do tópico HTML e CSS">
+              <button class="btn-icon btn-edit" data-action="edit-topic" data-target="topic-2" aria-label="Editar tópico" title="Editar tópico">✎</button>
+              <button class="btn-icon btn-remove" data-action="remove-topic" data-target="topic-2" aria-label="Remover tópico" title="Remover tópico">✕</button>
+            </div>
+          </header>
+
+          <ul class="subtopics-list" id="topic-2-subtopics" role="list" aria-label="Subtópicos de HTML e CSS">
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input type="checkbox" class="subtopic-check" data-topic-id="2" data-subtopic-id="2-1" checked aria-label="Semântica HTML — concluído" />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Semântica HTML</span>
+              </label>
+            </li>
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input type="checkbox" class="subtopic-check" data-topic-id="2" data-subtopic-id="2-2" checked aria-label="Flexbox — concluído" />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Flexbox</span>
+              </label>
+            </li>
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input type="checkbox" class="subtopic-check" data-topic-id="2" data-subtopic-id="2-3" checked aria-label="Grid Layout — concluído" />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Grid Layout</span>
+              </label>
+            </li>
+
+          </ul>
+
+          <footer class="topic-footer">
+            <button class="btn-add-sub" data-action="add-subtopic" data-target="topic-2" aria-label="Adicionar novo subtópico em HTML e CSS">
+              <span aria-hidden="true">＋</span> Adicionar subtópico
+            </button>
+          </footer>
+
+        </article>
+        <!-- /topic-2 -->
+
+
+        <!-- ────────────────────────────────────────────
+             TÓPICO EXEMPLO 3 — JavaScript
+        ─────────────────────────────────────────────── -->
+        <article
+          class="topic-card"
+          id="topic-3"
+          data-topic-id="3"
+          role="listitem"
+          aria-label="Tópico: JavaScript"
+        >
+
+          <header class="topic-header">
+            <div class="topic-title-group">
+              <span class="topic-status-dot" id="topic-3-dot" aria-hidden="true"></span>
+              <h3 class="topic-title" id="topic-3-title">JavaScript</h3>
+            </div>
+
+            <div class="topic-progress-mini" aria-label="Progresso do tópico">
+              <span class="topic-progress-text" id="topic-3-progress">1/5</span>
+              <div class="topic-bar-track">
+                <div class="topic-bar-fill" id="topic-3-bar" style="width: 20%;"></div>
+              </div>
+            </div>
+
+            <div class="topic-actions" role="group" aria-label="Ações do tópico JavaScript">
+              <button class="btn-icon btn-edit" data-action="edit-topic" data-target="topic-3" aria-label="Editar tópico" title="Editar tópico">✎</button>
+              <button class="btn-icon btn-remove" data-action="remove-topic" data-target="topic-3" aria-label="Remover tópico" title="Remover tópico">✕</button>
+            </div>
+          </header>
+
+          <ul class="subtopics-list" id="topic-3-subtopics" role="list" aria-label="Subtópicos de JavaScript">
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input type="checkbox" class="subtopic-check" data-topic-id="3" data-subtopic-id="3-1" checked aria-label="Tipos de Dados — concluído" />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Tipos de Dados</span>
+              </label>
+            </li>
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input type="checkbox" class="subtopic-check" data-topic-id="3" data-subtopic-id="3-2" aria-label="DOM Manipulation — pendente" />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">DOM Manipulation</span>
+              </label>
+            </li>
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input type="checkbox" class="subtopic-check" data-topic-id="3" data-subtopic-id="3-3" aria-label="Eventos — pendente" />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Eventos</span>
+              </label>
+            </li>
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input type="checkbox" class="subtopic-check" data-topic-id="3" data-subtopic-id="3-4" aria-label="Promises & Async — pendente" />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Promises &amp; Async</span>
+              </label>
+            </li>
+
+            <li class="subtopic-item" role="listitem">
+              <label class="subtopic-label">
+                <input type="checkbox" class="subtopic-check" data-topic-id="3" data-subtopic-id="3-5" aria-label="Fetch API — pendente" />
+                <span class="check-custom" aria-hidden="true"></span>
+                <span class="subtopic-text">Fetch API</span>
+              </label>
+            </li>
+
+          </ul>
+
+          <footer class="topic-footer">
+            <button class="btn-add-sub" data-action="add-subtopic" data-target="topic-3" aria-label="Adicionar novo subtópico em JavaScript">
+              <span aria-hidden="true">＋</span> Adicionar subtópico
+            </button>
+          </footer>
+
+        </article>
+        <!-- /topic-3 -->
+
+      </div>
+      <!-- /topics-list -->
+
+
+      <!-- Botão global para adicionar novo tópico -->
+      <div class="add-topic-wrapper">
+        <button
+          class="btn-add-topic"
+          id="btn-add-topic"
+          data-action="add-topic"
+          aria-label="Adicionar novo tópico ao roadmap"
+        >
+          <span class="btn-add-topic-icon" aria-hidden="true">＋</span>
+          <span>Adicionar novo tópico</span>
+        </button>
+      </div>
+
+    </section>
+    <!-- /section-roadmap -->
+
+
+    <!-- ─────────────────────────────────────────────────
+         PAINEL LATERAL DIREITO — Estatísticas
+    ───────────────────────────────────────────────────── -->
+    <aside
+      class="sidebar-stats"
+      id="sidebar-stats"
+      role="complementary"
+      aria-label="Painel de estatísticas de estudo"
+    >
+
+      <div class="sidebar-inner">
+
+        <h2 class="sidebar-title">
+          <span class="section-icon" aria-hidden="true">◉</span>
+          Estatísticas
+        </h2>
+
+
+        <!-- ── Card 1: Tópicos Concluídos / Pendentes ── -->
+        <article class="stat-card" id="card-topics" aria-label="Progresso de tópicos">
+          <header class="stat-card-header">
+            <span class="stat-icon" aria-hidden="true">📋</span>
+            <h3 class="stat-card-title">Tópicos</h3>
+          </header>
+
+          <div class="stat-row">
+            <div class="stat-item stat-done">
+              <span class="stat-value" id="stat-topics-done">1</span>
+              <span class="stat-desc">Concluídos</span>
+            </div>
+            <div class="stat-divider" aria-hidden="true"></div>
+            <div class="stat-item stat-pending">
+              <span class="stat-value" id="stat-topics-pending">2</span>
+              <span class="stat-desc">Pendentes</span>
+            </div>
+          </div>
+
+          <!-- Mini donut visual (placeholder para CSS/SVG) -->
+          <div class="stat-donut-wrap" aria-hidden="true">
+            <svg class="stat-donut" viewBox="0 0 36 36" aria-hidden="true">
+              <circle class="donut-bg"    cx="18" cy="18" r="15.9" />
+              <circle class="donut-fill"  cx="18" cy="18" r="15.9"
+                id="donut-fill-topics"
+                stroke-dasharray="33 67"
+                stroke-dashoffset="25"
+              />
+              <text x="18" y="20.5" class="donut-label" text-anchor="middle" id="donut-label-topics">33%</text>
+            </svg>
+          </div>
+        </article>
+        <!-- /card-topics -->
+
+
+        <!-- ── Card 2: Streak de Estudos ── -->
+        <article class="stat-card" id="card-streak" aria-label="Streak de dias consecutivos estudando">
+          <header class="stat-card-header">
+            <span class="stat-icon" aria-hidden="true">🔥</span>
+            <h3 class="stat-card-title">Streak de Estudo</h3>
+          </header>
+
+          <div class="streak-display">
+            <span class="streak-number" id="streak-number" aria-live="polite">7</span>
+            <span class="streak-unit">dias consecutivos</span>
+          </div>
+
+          <!-- Minicalendário de streak (7 últimos dias) -->
+          <div
+            class="streak-calendar"
+            id="streak-calendar"
+            aria-label="Últimos 7 dias de estudo"
+            role="list"
+          >
+            <!-- Dias preenchidos pelo JS (true = estudou, false = não estudou) -->
+            <!-- Exemplo estático: -->
+            <div class="streak-day is-done"  role="listitem" aria-label="Segunda — estudou">S</div>
+            <div class="streak-day is-done"  role="listitem" aria-label="Terça — estudou">T</div>
+            <div class="streak-day is-done"  role="listitem" aria-label="Quarta — estudou">Q</div>
+            <div class="streak-day is-done"  role="listitem" aria-label="Quinta — estudou">Q</div>
+            <div class="streak-day is-done"  role="listitem" aria-label="Sexta — estudou">S</div>
+            <div class="streak-day is-done"  role="listitem" aria-label="Sábado — estudou">S</div>
+            <div class="streak-day is-today" role="listitem" aria-label="Domingo — hoje">D</div>
+          </div>
+
+          <!-- Botão para registrar estudo de hoje -->
+          <button
+            class="btn-streak"
+            id="btn-streak"
+            data-action="log-today"
+            aria-label="Registrar estudo de hoje"
+          >
+            ✔ Estudei hoje!
+          </button>
+
+        </article>
+        <!-- /card-streak -->
+
+
+        <!-- ── Card 3: Imagem / GIF motivacional ── -->
+        <article class="stat-card card-avatar" id="card-avatar" aria-label="Imagem motivacional do desenvolvedor">
+          <header class="stat-card-header">
+            <span class="stat-icon" aria-hidden="true">🎌</span>
+            <h3 class="stat-card-title">Motivação</h3>
+          </header>
+
+          <!-- Área de imagem / GIF personalizado -->
+          <div class="avatar-frame" id="avatar-frame">
+
+            <!-- Placeholder quando sem imagem -->
+            <div class="avatar-placeholder" id="avatar-placeholder" aria-label="Nenhuma imagem definida">
+              <span class="avatar-placeholder-icon" aria-hidden="true">🖼</span>
+              <p class="avatar-placeholder-text">Adicione sua imagem<br />ou GIF favorito</p>
+            </div>
+
+            <!-- Imagem real (src definido por JS/LocalStorage) -->
+            <img
+              class="avatar-img hidden"
+              id="avatar-img"
+              src=""
+              alt="Imagem motivacional do desenvolvedor"
+            />
+
+          </div>
+          <!-- /avatar-frame -->
+
+          <!-- Ações de upload/URL -->
+          <div class="avatar-actions">
+            <label class="btn-avatar-upload" for="avatar-file-input" aria-label="Fazer upload de imagem">
+              <span aria-hidden="true">⬆</span> Upload
+              <input
+                type="file"
+                id="avatar-file-input"
+                accept="image/*,.gif"
+                class="visually-hidden"
+                aria-label="Selecionar imagem para motivação"
+              />
+            </label>
+
+            <button
+              class="btn-avatar-url"
+              id="btn-avatar-url"
+              data-action="set-avatar-url"
+              aria-label="Definir imagem por URL"
+            >
+              <span aria-hidden="true">🔗</span> URL
+            </button>
+          </div>
+
+        </article>
+        <!-- /card-avatar -->
+
+      </div>
+      <!-- /sidebar-inner -->
+
+    </aside>
+    <!-- /sidebar-stats -->
+
+
+  </main>
+  <!-- /MAIN -->
+
+
+  <!-- =====================================================
+       MODAIS — Gerenciados por JavaScript
+  ====================================================== -->
+
+  <!-- Modal: Adicionar / Editar Tópico -->
+  <div
+    class="modal-overlay hidden"
+    id="modal-topic"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-topic-title"
+    aria-describedby="modal-topic-desc"
+  >
+    <div class="modal-box" id="modal-topic-box">
+
+      <header class="modal-header">
+        <h2 class="modal-title" id="modal-topic-title">Novo Tópico</h2>
+        <button class="modal-close" data-action="close-modal" data-target="modal-topic" aria-label="Fechar modal">✕</button>
+      </header>
+
+      <p class="modal-desc visually-hidden" id="modal-topic-desc">
+        Formulário para adicionar ou editar um tópico de estudo.
+      </p>
+
+      <div class="modal-body">
+        <label class="form-label" for="input-topic-name">Nome do tópico</label>
+        <input
+          type="text"
+          id="input-topic-name"
+          class="form-input"
+          placeholder="Ex: React, Python, Git..."
+          maxlength="80"
+          aria-required="true"
+        />
+      </div>
+
+      <footer class="modal-footer">
+        <button class="btn-modal-cancel" data-action="close-modal" data-target="modal-topic">Cancelar</button>
+        <button class="btn-modal-confirm" id="btn-modal-topic-confirm" data-action="confirm-topic">Salvar</button>
+      </footer>
+
+    </div>
+  </div>
+  <!-- /modal-topic -->
+
+
+  <!-- Modal: Adicionar Subtópico -->
+  <div
+    class="modal-overlay hidden"
+    id="modal-subtopic"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-subtopic-title"
+    aria-describedby="modal-subtopic-desc"
+  >
+    <div class="modal-box" id="modal-subtopic-box">
+
+      <header class="modal-header">
+        <h2 class="modal-title" id="modal-subtopic-title">Novo Subtópico</h2>
+        <button class="modal-close" data-action="close-modal" data-target="modal-subtopic" aria-label="Fechar modal">✕</button>
+      </header>
+
+      <p class="modal-desc visually-hidden" id="modal-subtopic-desc">
+        Formulário para adicionar um subtópico de estudo.
+      </p>
+
+      <div class="modal-body">
+        <label class="form-label" for="input-subtopic-name">Nome do subtópico</label>
+        <input
+          type="text"
+          id="input-subtopic-name"
+          class="form-input"
+          placeholder="Ex: Arrow Functions, useState..."
+          maxlength="80"
+          aria-required="true"
+        />
+      </div>
+
+      <footer class="modal-footer">
+        <button class="btn-modal-cancel" data-action="close-modal" data-target="modal-subtopic">Cancelar</button>
+        <button class="btn-modal-confirm" id="btn-modal-subtopic-confirm" data-action="confirm-subtopic">Salvar</button>
+      </footer>
+
+    </div>
+  </div>
+  <!-- /modal-subtopic -->
+
+
+  <!-- Modal: Imagem por URL -->
+  <div
+    class="modal-overlay hidden"
+    id="modal-avatar-url"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-avatar-title"
+  >
+    <div class="modal-box" id="modal-avatar-box">
+
+      <header class="modal-header">
+        <h2 class="modal-title" id="modal-avatar-title">Imagem por URL</h2>
+        <button class="modal-close" data-action="close-modal" data-target="modal-avatar-url" aria-label="Fechar modal">✕</button>
+      </header>
+
+      <div class="modal-body">
+        <label class="form-label" for="input-avatar-url">URL da imagem ou GIF</label>
+        <input
+          type="url"
+          id="input-avatar-url"
+          class="form-input"
+          placeholder="https://..."
+          aria-required="true"
+        />
+      </div>
+
+      <footer class="modal-footer">
+        <button class="btn-modal-cancel" data-action="close-modal" data-target="modal-avatar-url">Cancelar</button>
+        <button class="btn-modal-confirm" id="btn-modal-avatar-confirm" data-action="confirm-avatar-url">Definir</button>
+      </footer>
+
+    </div>
+  </div>
+  <!-- /modal-avatar-url -->
+
+
+  <!-- =====================================================
+       UTILITÁRIOS ACESSIBILIDADE
+  ====================================================== -->
+  <!-- Região de notificações para leitores de tela -->
+  <div
+    id="sr-announcer"
+    class="visually-hidden"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>
+
+
+  <!-- =====================================================
+       JAVASCRIPT — a ser implementado / expandido
+       Placeholder de estrutura comentada para referência
+  ====================================================== -->
+  <script>
+    /**
+     * =====================================================
+     * app.js — Progresso do Dev Xodozada
+     * =====================================================
+     *
+     * ESTRUTURA PLANEJADA (implementar em arquivo separado):
+     *
+     * [1] STATE
+     *   - appState: { topics[], streak, avatar, lastStudyDate }
+     *   - Carregado e salvo em localStorage (key: 'devXodozada_v1')
+     *
+     * [2] CONSTANTES
+     *   - LEVELS: [{min,max,label}] — mapeamento de % → level
+     *
+     * [3] FUNÇÕES DE CÁLCULO
+     *   - calcProgress()   → calcula % geral (checkboxes marcados / total)
+     *   - calcLevel(pct)   → retorna level atual baseado no %
+     *   - calcTopicStats() → tópicos concluídos vs pendentes
+     *
+     * [4] FUNÇÕES DE RENDER / DOM
+     *   - renderHeader()      → atualiza barra, %, level badge
+     *   - renderTopics()      → reconstrói lista de tópicos
+     *   - renderStats()       → atualiza cards de estatísticas
+     *   - renderStreak()      → atualiza calendário e contador
+     *   - renderAvatar()      → mostra/esconde imagem
+     *
+     * [5] HANDLERS DE EVENTOS (Event Delegation no #main-layout)
+     *   - add-topic           → abre modal, salva novo tópico
+     *   - edit-topic          → abre modal com valor atual
+     *   - remove-topic        → confirm + remove do state
+     *   - add-subtopic        → abre modal, salva novo subtópico
+     *   - subtopic-check      → toggle checkbox, recalcula progresso
+     *   - log-today           → registra dia de estudo, atualiza streak
+     *   - set-avatar-url      → abre modal URL
+     *   - confirm-avatar-url  → salva URL no state
+     *   - avatar-file-input   → FileReader → base64 → state
+     *   - close-modal         → fecha qualquer modal
+     *
+     * [6] PERSISTÊNCIA
+     *   - loadState()  → JSON.parse(localStorage.getItem(...)) ?? defaultState
+     *   - saveState()  → localStorage.setItem(..., JSON.stringify(appState))
+     *
+     * [7] INIT
+     *   - loadState() → renderAll() → bindEvents()
+     * =====================================================
+     */
+
+    // Placeholder: comentário para JS futuro
+    console.log('[Dev Xodozada] HTML carregado. Aguardando JS e CSS. 🚀');
+  </script>
+
+  <!-- LINK placeholder para JS externo -->
+  <!-- <script src="app.js"></script> -->
+
+</body>
+</html>
