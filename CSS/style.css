@@ -96,13 +96,26 @@ body {
   min-height: 100vh;
   line-height: 1.6;
   overflow-x: hidden;
+}
 
-  /* Cyberpunk grid + ambient glow */
+/*
+  FIX SCROLL LAG #1 — grid movido para pseudo-elemento fixo.
+  Com position:fixed o grid NÃO rola junto com o conteúdo,
+  então o browser não precisa repintar a textura a cada pixel de scroll.
+  will-change:transform promove para camada de GPU separada.
+*/
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
     linear-gradient(rgba(106, 0, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(106, 0, 255, 0.03) 1px, transparent 1px),
     radial-gradient(ellipse 80% 60% at 50% -10%, #1a0040 0%, transparent 70%);
   background-size: 40px 40px, 40px 40px, 100% 100%;
+  will-change: transform;
 }
 
 ul, ol { list-style: none; }
@@ -191,11 +204,19 @@ img    { max-width: 100%; display: block; }
   top: 0;
   z-index: 100;
   background: linear-gradient(180deg, #0d0d22ee 0%, #0a0a1800 100%);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
   border-bottom: 1px solid var(--border-base);
   box-shadow: 0 1px 0 var(--border-dim), 0 8px 32px #0a0a1480;
   overflow: hidden;
+  /*
+    FIX SCROLL LAG #2 — header promovido para camada de GPU própria.
+    backdrop-filter é muito caro quando compartilha camada com o resto da página.
+    transform:translateZ(0) força o browser a isolar este elemento na GPU,
+    evitando que o blur recalcule a cada frame de scroll.
+  */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 /* Animated scan line on header */
@@ -502,6 +523,14 @@ img    { max-width: 100%; display: block; }
 
   /* Staggered entrance */
   animation: card-reveal 0.5s var(--ease-out) both;
+
+  /*
+    FIX SCROLL LAG #3 — cards promovidos para camada de GPU.
+    O hover usa translateY(-5px) que sem isso força recalculo de layout.
+    Com will-change o browser já reserva a camada antes do hover acontecer,
+    tornando a transição puramente composite (mais barato possível).
+  */
+  will-change: transform;
 }
 
 /* Entrance stagger delays */
