@@ -810,6 +810,68 @@ img    { max-width: 100%; display: block; }
 }
 
 
+/* ── Botão de remover subtópico individual ─────────── */
+
+/*
+  O <li> vira flex para colocar label e botão na mesma linha.
+  Sem isso o botão quebra para a segunda linha pois o label
+  é block por padrão.
+*/
+.subtopic-item {
+  display: flex;
+  align-items: center;
+}
+
+/*
+  flex:1 faz o label ocupar todo o espaço disponível,
+  empurrando o botão ✕ para a extrema direita automaticamente.
+*/
+.subtopic-item .subtopic-label {
+  flex: 1;
+}
+
+/*
+  Botão invisível por padrão — só aparece no hover do item.
+  Evita poluição visual: o ✕ só surge quando o usuário
+  passa o mouse sobre o subtópico que quer remover.
+*/
+.btn-del-sub {
+  flex-shrink: 0;
+  opacity: 0;
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    opacity       var(--t-fast),
+    color         var(--t-fast),
+    border-color  var(--t-fast),
+    background    var(--t-fast),
+    box-shadow    var(--t-fast);
+}
+
+/* Aparece ao passar o mouse sobre o item */
+.subtopic-item:hover .btn-del-sub {
+  opacity: 1;
+}
+
+/* Hover no próprio botão — temática cyberpunk pink */
+.btn-del-sub:hover {
+  color: var(--neon-pink);
+  border-color: var(--neon-pink);
+  background: #ff2d7818;
+  box-shadow: 0 0 8px #ff2d7840;
+}
+
+
 /* ── 11. ADD TOPIC BUTTON ───────────────────────────── */
 .add-topic-wrapper {
   display: flex;

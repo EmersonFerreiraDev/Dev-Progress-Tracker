@@ -40,13 +40,18 @@ export function announce(msg) {
 
 /**
  * Gera a string HTML de um item de subtópico (linha do checklist).
- * Chamada internamente por renderTopicCardHTML().
+ * Chamada internamente por renderTopicCardHTML() e addSubtopicItem().
+ *
+ * O id="sub-${sub.id}" na <li> é alvo direto de document.getElementById()
+ * no handler de remoção — permite deletar o elemento em O(1) sem
+ * percorrer o DOM inteiro.
+ *
  * @param {object} sub     - { id, text, done }
  * @param {number} topicId - ID do tópico pai
  */
 function renderSubtopicHTML(sub, topicId) {
   return `
-    <li class="subtopic-item" role="listitem">
+    <li class="subtopic-item" id="sub-${sub.id}" role="listitem">
       <label class="subtopic-label">
         <input type="checkbox" class="subtopic-check"
           data-topic-id="${topicId}"
@@ -55,6 +60,18 @@ function renderSubtopicHTML(sub, topicId) {
         <span class="check-custom" aria-hidden="true"></span>
         <span class="subtopic-text">${sub.text}</span>
       </label>
+      <!--
+        data-topic-id e data-subtopic-id são lidos pelo main.js
+        para localizar o item correto no state antes de remover.
+      -->
+      <button
+        class="btn-del-sub"
+        data-action="remove-subtopic"
+        data-topic-id="${topicId}"
+        data-subtopic-id="${sub.id}"
+        aria-label="Remover subtópico ${sub.text}"
+        title="Remover subtópico"
+      >✕</button>
     </li>`;
 }
 
@@ -340,16 +357,11 @@ export function addTopicCard(topic) {
   const emptyMsg = container.querySelector('p');
   if (emptyMsg) emptyMsg.remove();
 
-  /*
-    'beforeend' = insere como último filho do container.
-    Outras opções: 'afterbegin' (primeiro filho),
-    'beforebegin' (antes do container), 'afterend' (depois).
-  */
   container.insertAdjacentHTML('beforeend', renderTopicCardHTML(topic));
 }
 
 /**
- * [LISTA] Remove UM card de tópico do DOM.
+ * [LISTA] Remove UM card de tópico do DOM com animação de saída.
  *
  * element.remove() é a forma moderna de remover um elemento.
  * Não toca em nenhum outro card.
@@ -362,11 +374,6 @@ export function removeTopicCard(topicId) {
   const card = document.getElementById(`topic-${topicId}`);
   if (!card) return;
 
-  /*
-    Pequena animação de saída antes de remover do DOM.
-    Usamos transition no CSS (opacity + transform) e
-    depois de 250ms chamamos .remove() de verdade.
-  */
   card.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
   card.style.opacity    = '0';
   card.style.transform  = 'translateX(-12px)';
@@ -374,7 +381,6 @@ export function removeTopicCard(topicId) {
   setTimeout(() => {
     card.remove();
 
-    /* Se a lista ficou vazia, mostra a mensagem de estado vazio */
     const container = document.getElementById('topics-list');
     if (container && container.children.length === 0) {
       container.innerHTML = `
@@ -382,7 +388,7 @@ export function removeTopicCard(topicId) {
           Nenhum tópico ainda.
         </p>`;
     }
-  }, 220); /* um pouco mais que a duração da transição */
+  }, 220);
 }
 
 /**
@@ -395,10 +401,6 @@ export function removeTopicCard(topicId) {
  * @param {object} sub     - { id, text, done } do novo subtópico
  */
 export function addSubtopicItem(topicId, sub) {
-  /*
-    Cada <ul> de subtópicos tem id="topic-X-subtopics"
-    Isso foi definido em renderTopicCardHTML() acima.
-  */
   const list = document.getElementById(`topic-${topicId}-subtopics`);
   if (!list) return;
 
@@ -425,16 +427,10 @@ export function renderStreakCalendar(streak) {
   const now     = new Date();
   let html      = '';
 
-  /*
-    Gera os 7 dias: do mais antigo (6 dias atrás) até hoje (i=0).
-    Para cada dia:
-    - compara com o histórico para saber se o usuário estudou
-    - aplica a classe CSS correta (is-done, is-today, ou nenhuma)
-  */
   for (let i = 6; i >= 0; i--) {
     const d       = new Date(now);
     d.setDate(now.getDate() - i);
-    const dateStr = d.toISOString().slice(0, 10); /* "YYYY-MM-DD" */
+    const dateStr = d.toISOString().slice(0, 10);
     const studied = history.includes(dateStr);
     const isToday = i === 0;
 
@@ -442,7 +438,6 @@ export function renderStreakCalendar(streak) {
     if (isToday)      cls += ' is-today';
     else if (studied) cls += ' is-done';
 
-    /* DAY_LABELS: ['D','S','T','Q','Q','S','S'] indexado pelo dia da semana */
     html += `<div class="${cls}" role="listitem">${DAY_LABELS[d.getDay()]}</div>`;
   }
 
@@ -452,20 +447,17 @@ export function renderStreakCalendar(streak) {
 /**
  * [PATCH] Atualiza o contador de streak e o estado do botão "Estudei hoje!".
  *
- * @param {object} streak  - objeto streak do appState
+ * @param {object} streak   - objeto streak do appState
  * @param {string} todayStr - data de hoje no formato "YYYY-MM-DD"
  */
 export function patchStreak(streak, todayStr) {
-  /* Atualiza o número grande */
   const numEl = document.getElementById('streak-number');
   if (numEl) numEl.textContent = streak.count;
 
-  /* Atualiza o calendário */
   renderStreakCalendar(streak);
 
-  /* Atualiza o botão: desabilita se já registrou hoje */
-  const btn        = document.getElementById('btn-streak');
-  const todayDone  = streak.lastStudyDate === todayStr;
+  const btn       = document.getElementById('btn-streak');
+  const todayDone = streak.lastStudyDate === todayStr;
   if (btn) {
     btn.textContent   = todayDone ? '✔ Registrado hoje!' : '✔ Estudei hoje!';
     btn.disabled      = todayDone;
