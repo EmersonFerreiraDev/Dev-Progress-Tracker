@@ -1,48 +1,37 @@
-# ⚡ Dev-Progress-Tracker ⚡
-> "Coding is my way of hacking reality." 💻🚀
+# 🌑 Dev-Progress-Tracker
+> "I am not yet where I want to be, but I am closer than I was yesterday." 
 
-Bem-vindo ao **Dev-Progress-Tracker**, o meu diário de bordo digital. Este projeto nasceu da necessidade de rastrear minha jornada de estudos em Desenvolvimento Web de uma forma imersiva, performática e, claro, **Cyberpunk**. 🧬🌃
+O **Dev-Progress-Tracker** é o meu sistema pessoal de evolução técnica. Projetado para ser uma interface de alto impacto visual e **performance extrema**, focado em quem valoriza a disciplina e o código limpo.
 
 ---
 
-## 🚀 Sobre o Projeto
-Este é um dashboard pessoal, criado com foco em **Vibecoding** e experimentação visual. A ferramenta foi construída para motivar a constância nos estudos, monitorando o progresso através de uma interface inspirada em tecnologias distópicas e estéticas de neon. 🧪✨
+## 🚀 O Projeto
+Saímos do excesso visual para focar na **Essência**. Este dashboard foi reconstruído com uma estética **Dark Minimalist**, inspirada no contraste de grandes obras *Seinen*. O objetivo é simples: rastrear o progresso sem distrações e sem pesar no hardware.
 
-Não é apenas uma lista de estudos, é o meu **sistema de suporte operacional** para me tornar um Full Stack Developer. 🛠️🤖
+## 🛠️ Stack Técnica
+- 🌑 **Vanilla JS (ES6+)**: Lógica centralizada e modular. Sem bibliotecas pesadas.
+- 🖋️ **CSS Moderno**: Variáveis de tema e arquitetura focada em renderização fluida (Zero Lag).
+- 🏗️ **DOM Patching**: Atualizações granulares para manter a interface rápida e responsiva.
+- 💾 **LocalStorage**: Persistência de dados local para uso imediato e offline.
+- ⚡ **Git Workflow**: Gestão de código profissional e organizada.
 
-## 🛠️ Stack Tecnológica
-- 🌐 **HTML5**: Estrutura semântica.
-- 🎨 **CSS3**: Estilização imersiva com variáveis de tema e animações.
-- ⚙️ **JavaScript (ES6+)**: Motor lógico robusto com padrão de arquitetura modular.
-- 💾 **LocalStorage API**: Persistência de dados offline.
-- 📂 **Git & GitHub**: Versionamento de código profissional.
+## ✨ Funcionalidades
+- **Gestão de Tópicos (CRUD)**: Controle total sobre a jornada de estudos.
+- **Evolução de Nível**: Sistema de RPG que traduz o progresso em níveis de domínio.
+- **Streak Tracker**: Monitoramento de consistência com calendário de 7 dias integrado.
+- **Visual Feedback**: Gráficos e barras de progresso otimizados para performance.
+- **Avatar System**: Customização de perfil via URL ou upload local.
 
-## ✨ Funcionalidades Principais
-- **Sistema de CRUD**: Adição, edição e remoção dinâmica de tópicos e subtópicos.
-- **Progresso RPG**: Cálculo de níveis e porcentagem de evolução global baseados na meta de estudos.
-- **Streak Tracker**: Monitoramento de consistência com calendário de 7 dias e registro automático.
-- **Visual Feedback**: Gráficos SVG (Donut Chart), barras de progresso animadas e notificações via `aria-live`.
-- **Customização**: Upload de avatar via URL externa ou arquivo local (Base64).
-- **Interface Inteligente**: Navegação via modais e delegação de eventos para alta performance.
-
-## 📂 Estrutura do Projeto
-O projeto utiliza um padrão de estado centralizado (`appState`), garantindo uma arquitetura limpa e escalável.
-
-## 💡 Por que este projeto existe?
-- **Vibe:** Porque o código precisa ter alma. 🖤
-- **Aprendizado:** Para praticar a lógica de integração de sistemas complexos. 🔗
-- **Metas:** Rastrear cada passo da minha evolução profissional. 📈
-
-## 🔮 O Futuro
-O sistema está em constante evolução. Cada commit é uma nova atualização de firmware para a minha carreira! 🛠️🛰️
+## 📂 Arquitetura
+O sistema utiliza um padrão de **Estado Único (`appState`)** e **Event Delegation**, garantindo que o código seja escalável e o consumo de memória, mínimo.
 
 ---
 
 ### 👤 Autor
 **Emerson Ferreira**
-*Full Stack Developer in training* 💻 | *JavaScript Enthusiast* ⚡
+*Full Stack Developer em treinamento* 💻
 
 📫 *Contato:* **contato.emersondev@gmail.com**
 
 ---
-*Built with passion and too much coffee. ☕🔥*.
+*"A perfeição não é alcançada quando não há mais nada a acrescentar, mas quando não há mais nada a tirar."*
