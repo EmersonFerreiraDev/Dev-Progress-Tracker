@@ -33,7 +33,10 @@ export function renderTopicCardHTML(topic) {
   const subsHTML = topic.subtopics.map(s => renderSubtopicHTML(s, topic.id)).join('');
 
   return `
-    <article class="topic-card" id="topic-${topic.id}" data-topic-id="${topic.id}">
+    <article class="topic-card ${complete ? 'is-complete' : ''}"
+      id="topic-${topic.id}"
+      data-topic-id="${topic.id}"
+      style="--topic-pct: ${pct}%">
       <header class="topic-header">
         <div class="topic-title-group">
           <span class="topic-status-dot ${complete ? 'is-complete' : ''}" id="topic-${topic.id}-dot"></span>
@@ -62,7 +65,7 @@ export function renderAll(state) {
   if (container) {
     container.innerHTML = state.topics.length > 0
       ? state.topics.map(renderTopicCardHTML).join('')
-      : `<p style="text-align:center;padding:2rem;color:#333;">Nenhum tópico ainda.</p>`;
+      : `<p style="text-align:center;padding:3rem;color:#333;font-size:0.8rem;">Nenhum tópico ainda.</p>`;
   }
   patchHeader(state.globalPct);
   const numStreak = document.getElementById('streak-number');
@@ -76,10 +79,7 @@ export function patchTopicProgress(topicId, done, total, pct) {
   const progressText = document.getElementById(`topic-${topicId}-progress`);
   if (progressText) progressText.textContent = `${done}/${total}`;
   const bar = document.getElementById(`topic-${topicId}-bar`);
-  if (bar) {
-    bar.style.width = `${pct}%`;
-    bar.classList.toggle('is-complete', complete);
-  }
+  if (bar) { bar.style.width = `${pct}%`; bar.classList.toggle('is-complete', complete); }
   const dot = document.getElementById(`topic-${topicId}-dot`);
   if (dot) dot.classList.toggle('is-complete', complete);
 }
@@ -89,13 +89,27 @@ export function patchTopicTitle(topicId, newTitle) {
   if (el) el.textContent = newTitle;
 }
 
+/*
+  Quando pct === 100, o texto de porcentagem vira "BANKAI"
+  e recebe a classe is-bankai para o CSS aplicar a fonte serifada.
+  Quando cair abaixo de 100, volta ao número normal.
+*/
 export function patchHeader(pct) {
   const fill = document.getElementById('progress-bar-fill');
-  if (fill) fill.style.width = `${pct}%`;
+  if (fill) {
+    fill.style.width = `${pct}%`;
+    fill.classList.toggle('is-bankai', pct === 100);
+  }
+
   const pctEl = document.getElementById('progress-percent');
-  if (pctEl) pctEl.textContent = `${pct}%`;
+  if (pctEl) {
+    pctEl.textContent = pct === 100 ? 'BANKAI' : `${pct}%`;
+    pctEl.classList.toggle('is-bankai', pct === 100);
+  }
+
   const track = document.getElementById('progress-bar-track');
   if (track) track.setAttribute('aria-valuenow', pct);
+
   const level = calcLevel(pct);
   const numEl = document.getElementById('level-number');
   if (numEl) numEl.textContent = level.number;
@@ -148,12 +162,12 @@ export function removeTopicCard(topicId) {
   if (!card) return;
   card.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
   card.style.opacity    = '0';
-  card.style.transform  = 'translateX(-8px)';
+  card.style.transform  = 'translateX(-6px)';
   setTimeout(() => {
     card.remove();
     const container = document.getElementById('topics-list');
     if (container && container.children.length === 0) {
-      container.innerHTML = `<p style="text-align:center;padding:2rem;color:#333;">Nenhum tópico ainda.</p>`;
+      container.innerHTML = `<p style="text-align:center;padding:3rem;color:#333;font-size:0.8rem;">Nenhum tópico ainda.</p>`;
     }
   }, 160);
 }
