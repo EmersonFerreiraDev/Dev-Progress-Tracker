@@ -5,6 +5,12 @@ export function announce(msg) {
   if (el) el.textContent = msg;
 }
 
+function getStatusBadge(pct) {
+  if (pct === 100) return { label: '✦ Dominado',     cls: 'status-done' };
+  if (pct > 0)     return { label: '◎ Em progresso', cls: 'status-progress' };
+  return               { label: '— Não iniciado',    cls: '' };
+}
+
 function renderSubtopicHTML(sub, topicId) {
   return `
     <li class="subtopic-item" id="sub-${sub.id}" role="listitem">
@@ -30,6 +36,7 @@ function renderSubtopicHTML(sub, topicId) {
 export function renderTopicCardHTML(topic) {
   const { done, total, pct } = calcTopicProgress(topic);
   const complete = pct === 100;
+  const status   = getStatusBadge(pct);
   const subsHTML = topic.subtopics.map(s => renderSubtopicHTML(s, topic.id)).join('');
 
   return `
@@ -42,6 +49,7 @@ export function renderTopicCardHTML(topic) {
           <span class="topic-status-dot ${complete ? 'is-complete' : ''}" id="topic-${topic.id}-dot"></span>
           <h3 class="topic-title" id="topic-${topic.id}-title">${topic.title}</h3>
         </div>
+        <span class="topic-status-badge ${status.cls}" id="topic-${topic.id}-badge">${status.label}</span>
         <div class="topic-progress-mini">
           <span class="topic-progress-text" id="topic-${topic.id}-progress">${done}/${total}</span>
           <div class="topic-bar-track">
@@ -60,14 +68,24 @@ export function renderTopicCardHTML(topic) {
     </article>`;
 }
 
+function emptyStateHTML() {
+  return `
+    <div class="empty-state">
+      <div class="empty-state-kanji">始</div>
+      <p class="empty-state-title">Comece seu Shikai</p>
+      <p class="empty-state-sub">Adicione o primeiro tópico do seu roadmap.</p>
+    </div>`;
+}
+
 export function renderAll(state) {
   const container = document.getElementById('topics-list');
   if (container) {
     container.innerHTML = state.topics.length > 0
       ? state.topics.map(renderTopicCardHTML).join('')
-      : `<p style="text-align:center;padding:3rem;color:#333;font-size:0.8rem;">Nenhum tópico ainda.</p>`;
+      : emptyStateHTML();
   }
   patchHeader(state.globalPct);
+  patchGlobalCount(state);
   const numStreak = document.getElementById('streak-number');
   if (numStreak) numStreak.textContent = state.streak.count;
   renderStreakCalendar(state.streak);
@@ -76,12 +94,37 @@ export function renderAll(state) {
 
 export function patchTopicProgress(topicId, done, total, pct) {
   const complete = pct === 100;
+  const wasComplete = document.getElementById(`topic-${topicId}`)?.classList.contains('is-complete');
+
   const progressText = document.getElementById(`topic-${topicId}-progress`);
   if (progressText) progressText.textContent = `${done}/${total}`;
+
   const bar = document.getElementById(`topic-${topicId}-bar`);
   if (bar) { bar.style.width = `${pct}%`; bar.classList.toggle('is-complete', complete); }
+
   const dot = document.getElementById(`topic-${topicId}-dot`);
   if (dot) dot.classList.toggle('is-complete', complete);
+
+  const badge = document.getElementById(`topic-${topicId}-badge`);
+  if (badge) {
+    const status = getStatusBadge(pct);
+    badge.textContent = status.label;
+    badge.className   = `topic-status-badge ${status.cls}`;
+  }
+
+  const card = document.getElementById(`topic-${topicId}`);
+  if (card) {
+    card.classList.toggle('is-complete', complete);
+    card.style.setProperty('--topic-pct', `${pct}%`);
+
+    /* Flash de conclusão — só dispara quando ACABA de completar */
+    if (complete && !wasComplete) {
+      card.classList.remove('just-completed');
+      void card.offsetWidth;
+      card.classList.add('just-completed');
+      setTimeout(() => card.classList.remove('just-completed'), 1600);
+    }
+  }
 }
 
 export function patchTopicTitle(topicId, newTitle) {
@@ -89,17 +132,9 @@ export function patchTopicTitle(topicId, newTitle) {
   if (el) el.textContent = newTitle;
 }
 
-/*
-  Quando pct === 100, o texto de porcentagem vira "BANKAI"
-  e recebe a classe is-bankai para o CSS aplicar a fonte serifada.
-  Quando cair abaixo de 100, volta ao número normal.
-*/
 export function patchHeader(pct) {
   const fill = document.getElementById('progress-bar-fill');
-  if (fill) {
-    fill.style.width = `${pct}%`;
-    fill.classList.toggle('is-bankai', pct === 100);
-  }
+  if (fill) fill.style.width = `${pct}%`;
 
   const pctEl = document.getElementById('progress-percent');
   if (pctEl) {
@@ -115,6 +150,18 @@ export function patchHeader(pct) {
   if (numEl) numEl.textContent = level.number;
   const titleEl = document.getElementById('level-title');
   if (titleEl) titleEl.textContent = level.title;
+}
+
+/* Contador global de subtópicos na sidebar */
+export function patchGlobalCount(state) {
+  const el = document.getElementById('sidebar-global-count');
+  if (!el) return;
+  let total = 0, done = 0;
+  state.topics.forEach(t => {
+    total += t.subtopics.length;
+    done  += t.subtopics.filter(s => s.done).length;
+  });
+  el.innerHTML = `<strong>${done}</strong> de <strong>${total}</strong> subtópicos concluídos`;
 }
 
 export function patchStats(done, pending) {
@@ -152,7 +199,7 @@ export function patchAvatar(avatarSrc) {
 export function addTopicCard(topic) {
   const container = document.getElementById('topics-list');
   if (!container) return;
-  const emptyMsg = container.querySelector('p');
+  const emptyMsg = container.querySelector('.empty-state');
   if (emptyMsg) emptyMsg.remove();
   container.insertAdjacentHTML('beforeend', renderTopicCardHTML(topic));
 }
@@ -167,7 +214,7 @@ export function removeTopicCard(topicId) {
     card.remove();
     const container = document.getElementById('topics-list');
     if (container && container.children.length === 0) {
-      container.innerHTML = `<p style="text-align:center;padding:3rem;color:#333;font-size:0.8rem;">Nenhum tópico ainda.</p>`;
+      container.innerHTML = emptyStateHTML();
     }
   }, 160);
 }

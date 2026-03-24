@@ -9,6 +9,7 @@ import {
   patchStreak,
   patchAvatar,
   patchDonut,
+  patchGlobalCount,
   addTopicCard,
   removeTopicCard,
   addSubtopicItem,
@@ -18,11 +19,9 @@ import {
   announce,
 } from './ui.js';
 
-let state         = defaultState();
-let editingTopicId    = null;
-let addingSubToId     = null;
-
-/* ── UTILS ── */
+let state          = defaultState();
+let editingTopicId = null;
+let addingSubToId  = null;
 
 function refreshStats() {
   let done = 0, pending = 0;
@@ -31,13 +30,9 @@ function refreshStats() {
     pct === 100 && topic.subtopics.length > 0 ? done++ : pending++;
   });
   patchStats(done, pending);
+  patchGlobalCount(state);
 }
 
-/**
- * Atualiza o fio vertical de progresso no card via CSS custom property.
- * O ::before do card usa var(--topic-pct) como height.
- * Também adiciona/remove a classe is-complete no card.
- */
 function patchCardWire(topicId, pct) {
   const card = document.getElementById(`topic-${topicId}`);
   if (!card) return;
@@ -45,8 +40,7 @@ function patchCardWire(topicId, pct) {
   card.classList.toggle('is-complete', pct === 100);
 }
 
-/* ── HANDLERS — Checkbox ── */
-
+/* ── CHECKBOX ── */
 function handleCheckboxChange(checkbox) {
   const topicId    = parseInt(checkbox.dataset.topicId);
   const subtopicId = checkbox.dataset.subtopicId;
@@ -60,16 +54,13 @@ function handleCheckboxChange(checkbox) {
   const { done, total, pct } = calcTopicProgress(topic);
   patchTopicProgress(topicId, done, total, pct);
   patchCardWire(topicId, pct);
-
-  const globalPct = calcGlobalProgress(state.topics);
-  patchHeader(globalPct);
+  patchHeader(calcGlobalProgress(state.topics));
   refreshStats();
 
   announce(`${subtopic.text}: ${checkbox.checked ? 'concluído' : 'pendente'}`);
 }
 
-/* ── HANDLERS — Tópicos ── */
-
+/* ── TÓPICOS ── */
 function handleAddTopic() {
   editingTopicId = null;
   const titleEl   = document.getElementById('modal-topic-title');
@@ -87,9 +78,9 @@ function handleEditTopic(targetId) {
   const titleEl   = document.getElementById('modal-topic-title');
   const confirmEl = document.getElementById('btn-modal-topic-confirm');
   const inputEl   = document.getElementById('input-topic-name');
-  if (titleEl)   titleEl.textContent  = 'Editar Tópico';
+  if (titleEl)   titleEl.textContent   = 'Editar Tópico';
   if (confirmEl) confirmEl.textContent = 'Salvar';
-  if (inputEl)   inputEl.value        = topic.title;
+  if (inputEl)   inputEl.value         = topic.title;
   openModal('modal-topic');
   if (inputEl) setTimeout(() => { inputEl.focus(); inputEl.select(); }, 80);
 }
@@ -100,14 +91,14 @@ function handleConfirmTopic() {
   if (!name) {
     if (inputEl) {
       inputEl.focus();
-      inputEl.style.borderColor = '#e53935';
+      inputEl.style.borderColor = '#cc0000';
       setTimeout(() => inputEl.style.borderColor = '', 1500);
     }
     return;
   }
   if (editingTopicId !== null) {
     const topic = state.topics.find(t => t.id === editingTopicId);
-    if (topic) { topic.title = name; patchTopicTitle(editingTopicId, name); announce(`Tópico renomeado para "${name}".`); }
+    if (topic) { topic.title = name; patchTopicTitle(editingTopicId, name); announce(`Tópico renomeado.`); }
   } else {
     const newTopic = { id: state.nextTopicId++, title: name, subtopics: [] };
     state.topics.push(newTopic);
@@ -135,8 +126,7 @@ function handleRemoveTopic(targetId) {
   announce(`Tópico "${topic.title}" removido.`);
 }
 
-/* ── HANDLERS — Subtópicos ── */
-
+/* ── SUBTÓPICOS ── */
 function handleAddSubtopic(targetId) {
   const topicId = parseInt(targetId.replace('topic-', ''));
   const topic   = state.topics.find(t => t.id === topicId);
@@ -153,7 +143,7 @@ function handleConfirmSubtopic() {
   if (!name) {
     if (inputEl) {
       inputEl.focus();
-      inputEl.style.borderColor = '#e53935';
+      inputEl.style.borderColor = '#cc0000';
       setTimeout(() => inputEl.style.borderColor = '', 1500);
     }
     return;
@@ -187,8 +177,7 @@ function handleRemoveSubtopic(btn) {
   announce('Subtópico removido.');
 }
 
-/* ── HANDLER — Streak ── */
-
+/* ── STREAK ── */
 function handleLogToday() {
   const today  = todayStr();
   const streak = state.streak;
@@ -207,8 +196,7 @@ function handleLogToday() {
   announce(`Estudo registrado! Streak: ${streak.count} dias.`);
 }
 
-/* ── HANDLERS — Avatar ── */
-
+/* ── AVATAR ── */
 function handleSetAvatarUrl() {
   const inputEl = document.getElementById('input-avatar-url');
   if (inputEl && state.avatar?.startsWith('http')) inputEl.value = state.avatar;
@@ -234,14 +222,46 @@ function handleAvatarUpload(e) {
     state.avatar = ev.target.result;
     saveState(state);
     patchAvatar(state.avatar);
-    announce('Imagem motivacional carregada.');
+    announce('Imagem carregada.');
   };
   reader.readAsDataURL(file);
   e.target.value = '';
 }
 
-/* ── EVENTS ── */
+/* ── ATALHOS DE TECLADO ── */
+function bindKeyboardShortcuts() {
+  document.addEventListener('keydown', e => {
+    /* Ignora quando modal aberto ou input focado */
+    const modalOpen  = [...document.querySelectorAll('.modal-overlay')].some(m => !m.classList.contains('hidden'));
+    const inputFocus = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+    if (modalOpen || inputFocus) return;
 
+    if (e.key === 'n' || e.key === 'N') { e.preventDefault(); handleAddTopic(); }
+    if (e.key === '?')                  { e.preventDefault(); toggleShortcutsPanel(); }
+  });
+}
+
+function toggleShortcutsPanel() {
+  let panel = document.getElementById('shortcuts-panel');
+  if (panel) { panel.remove(); return; }
+  panel = document.createElement('div');
+  panel.id = 'shortcuts-panel';
+  panel.style.cssText = `
+    position:fixed; bottom:24px; right:24px; z-index:999;
+    background:#0d0d0d; border:1px solid #333; border-radius:2px;
+    padding:16px 20px; font-size:0.68rem; color:#888;
+    line-height:2; min-width:200px;
+  `;
+  panel.innerHTML = `
+    <div style="color:#eee;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;font-size:0.6rem;">Atalhos</div>
+    <div><kbd style="color:#eee">N</kbd> &nbsp; Novo tópico</div>
+    <div><kbd style="color:#eee">Esc</kbd> &nbsp; Fechar modal</div>
+    <div><kbd style="color:#eee">?</kbd> &nbsp; Fechar esta ajuda</div>
+  `;
+  document.body.appendChild(panel);
+}
+
+/* ── EVENTOS ── */
 function bindEvents() {
   document.addEventListener('click', e => {
     const btn = e.target.closest('[data-action]');
@@ -287,21 +307,19 @@ function bindEvents() {
 
   document.getElementById('avatar-file-input')
     ?.addEventListener('change', handleAvatarUpload);
+
+  bindKeyboardShortcuts();
 }
 
 /* ── INIT ── */
-
 function init() {
   state = loadState();
   state.globalPct = calcGlobalProgress(state.topics);
   renderAll(state);
-
-  /* Aplica o fio de progresso em todos os cards após o render inicial */
   state.topics.forEach(topic => {
     const { pct } = calcTopicProgress(topic);
     patchCardWire(topic.id, pct);
   });
-
   bindEvents();
   console.log('[Dev Xodozada] 魂 App iniciado.', state);
 }

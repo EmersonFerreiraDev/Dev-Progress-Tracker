@@ -13,72 +13,6 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="CSS/style.css">
-
-  <!-- =====================================================
-       CSS PRINCIPAL — será substituído/expandido depois
-  ====================================================== -->
-  <style>
-    /* ── CSS Custom Properties ─────────────────────────── */
-    :root {
-      --bg-base:        #0b0d12;
-      --bg-surface:     #12151d;
-      --bg-card:        #181c27;
-      --bg-card-hover:  #1e2335;
-      --border:         #252a3a;
-      --border-glow:    #3d4a6b;
-
-      --accent-primary: #4f8ef7;   /* azul elétrico */
-      --accent-glow:    #4f8ef740;
-      --accent-green:   #3ddba5;
-      --accent-yellow:  #f5c842;
-      --accent-red:     #f76f6f;
-      --accent-purple:  #a78bfa;
-
-      --text-primary:   #e8ecf5;
-      --text-secondary: #8892a8;
-      --text-muted:     #4b5470;
-
-      --font-display: 'Orbitron', monospace;
-      --font-body:    'DM Sans', sans-serif;
-
-      --radius-sm:  6px;
-      --radius-md:  12px;
-      --radius-lg:  18px;
-
-      --shadow-card: 0 4px 32px rgba(0,0,0,0.45);
-      --shadow-glow: 0 0 18px var(--accent-glow);
-
-      --transition: 0.22s cubic-bezier(.4,0,.2,1);
-    }
-
-    /* ── Reset & Base ───────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: var(--font-body);
-      background-color: var(--bg-base);
-      color: var(--text-primary);
-      min-height: 100vh;
-      line-height: 1.6;
-      /* scanline texture overlay */
-      background-image:
-        repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 2px,
-          rgba(255,255,255,0.012) 2px,
-          rgba(255,255,255,0.012) 4px
-        );
-    }
-
-    /* ── Scrollbar ──────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg-base); }
-    ::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 3px; }
-  </style>
-
   <!-- LINK placeholder para CSS externo (a ser adicionado) -->
   <!-- <link rel="stylesheet" href="style.css" /> -->
 </head>
@@ -489,6 +423,9 @@
       <div class="sidebar-inner">
 
         <h2 class="sidebar-title">
+          <p class="sidebar-global-count" id="sidebar-global-count">
+  — de — subtópicos concluídos
+</p>
           <span class="section-icon" aria-hidden="true">◉</span>
           Estatísticas
         </h2>
